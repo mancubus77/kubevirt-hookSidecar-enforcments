@@ -29,21 +29,21 @@ spec:
 apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
 metadata:
-  name: kvmhooksidecarrequired
+  name: vmihooksidecarrequired
 spec:
   crd:
     spec:
       names:
-        kind: KVMHookSidecarRequired   # This registers the CRD kind
+        kind: VMIHookSidecarRequired   # This registers the CRD kind
   targets:
     - target: admission.k8s.gatekeeper.sh
       rego: |
-        package kvmhooksidecar
+        package vmihooksidecar
         expected := "[{\"args\": [\"--version\", \"v1alpha2\"], \"image\": \"quay.io/mancubus77/kubevirt-sidecar-shim\"}]"
         violation[{"msg": msg}] {
-          input.review.kind.kind == "VirtualMachine"
+          input.review.kind.kind == "VirtualMachineInstance"
           obj := input.review.object
-          ann := obj.spec.template.metadata.annotations["hooks.kubevirt.io/hookSidecars"]
+          ann := obj.metadata.annotations["hooks.kubevirt.io/hookSidecars"]
           ann != expected
           msg := sprintf("Invalid hooks.kubevirt.io/hookSidecars. Must exactly equal %v", [expected])
         }
