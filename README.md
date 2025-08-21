@@ -6,7 +6,7 @@ This project enforces SMBIOS settings for VMs running on OpenShift Virtualizatio
 
 - **Purpose**: Automatically update VM SMBIOS settings (product → "KVM", family → "Virtual Machine")
 - **Security**: Provides 3 different methods to prevent users from bypassing or modifying the sidecar configuration
-- **Implementation**: KubeVirt hookSidecar that intercepts `OnDefineDomain` events
+- **Implementation**: KubeVirt hookSidecar image that injects `OnDefineDomain` binary with hardcoded SMBIOS values
 
 ## Components
 
