@@ -1,0 +1,27 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: kvmhooksidecarrequired
+spec:
+  crd:
+    spec:
+      names:
+        kind: KVMHookSidecarRequired   # This defines the valid kind
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            dummy:
+              type: boolean
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package kvmhooksidecar
+        expected := "[{\"args\": [\"--version\", \"v1alpha2\"], \"image\": \"quay.io/mancubus77/kubevirt-sidecar-shim\"}]"
+        violation[{"msg": msg}] {
+          input.review.kind.kind == "VirtualMachine"
+          obj := input.review.object
+          ann := obj.spec.template.metadata.annotations["hooks.kubevirt.io/hookSidecars"]
+          ann != expected
+          msg := sprintf("Invalid hooks.kubevirt.io/hookSidecars. Must exactly equal %v", [expected])
+        }

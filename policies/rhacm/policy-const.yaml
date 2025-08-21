@@ -1,0 +1,46 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: policy-kvm-hooksidecar-constraint
+  namespace: policies
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+    - objectDefinition:
+        apiVersion: constraints.gatekeeper.sh/v1beta1
+        kind: KVMHookSidecarRequired        # MUST match ConstraintTemplate.spec.crd.spec.names.kind
+        metadata:
+          name: enforce-hook-sidecar
+        spec:
+          enforcementAction: deny
+          match:
+            kinds:
+              - apiGroups: ["kubevirt.io"]
+                kinds: ["VirtualMachine"]
+
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+  name: placement-policy-kvm-hooksidecar-constraint
+  namespace: policies
+spec:
+  clusterConditions:
+    - type: ManagedClusterConditionAvailable
+      status: "True"
+  clusterSelector: {}   # Empty selector = all clusters
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: binding-policy-kvm-hooksidecar-constraint
+  namespace: policies
+placementRef:
+  kind: PlacementRule
+  apiGroup: apps.open-cluster-management.io
+  name: placement-policy-kvm-hooksidecar-constraint
+subjects:
+  - name: policy-kvm-hooksidecar-constraint
+    kind: Policy
+    apiGroup: policy.open-cluster-management.io

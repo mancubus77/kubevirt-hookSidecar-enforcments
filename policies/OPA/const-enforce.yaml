@@ -1,0 +1,10 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: KVMHookSidecarRequired     # Must match the 'kind' from the template
+metadata:
+  name: enforce-hook-sidecar
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: ["kubevirt.io"]
+        kinds: ["VirtualMachine"]

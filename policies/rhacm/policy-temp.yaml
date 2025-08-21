@@ -1,0 +1,56 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: policy-kvm-hooksidecar-template
+  namespace: policies
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+    - objectDefinition:
+        apiVersion: templates.gatekeeper.sh/v1
+        kind: ConstraintTemplate
+        metadata:
+          name: kvmhooksidecarrequired
+        spec:
+          crd:
+            spec:
+              names:
+                kind: KVMHookSidecarRequired   # This registers the CRD kind
+          targets:
+            - target: admission.k8s.gatekeeper.sh
+              rego: |
+                package kvmhooksidecar
+                expected := "[{\"args\": [\"--version\", \"v1alpha2\"], \"image\": \"quay.io/mancubus77/kubevirt-sidecar-shim\"}]"
+                violation[{"msg": msg}] {
+                  input.review.kind.kind == "VirtualMachine"
+                  obj := input.review.object
+                  ann := obj.spec.template.metadata.annotations["hooks.kubevirt.io/hookSidecars"]
+                  ann != expected
+                  msg := sprintf("Invalid hooks.kubevirt.io/hookSidecars. Must exactly equal %v", [expected])
+                }
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+  name: placement-policy-kvm-hooksidecar-template
+  namespace: policies
+spec:
+  clusterConditions:
+    - type: ManagedClusterConditionAvailable
+      status: "True"
+  clusterSelector: {}   # Empty selector = all clusters
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: binding-policy-kvm-hooksidecar-template
+  namespace: policies
+placementRef:
+  kind: PlacementRule
+  apiGroup: apps.open-cluster-management.io
+  name: placement-policy-kvm-hooksidecar-template
+subjects:
+  - name: policy-kvm-hooksidecar-template
+    kind: Policy
+    apiGroup: policy.open-cluster-management.io

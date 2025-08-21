@@ -1,0 +1,15 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: enforce-hook-sidecar
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["kubevirt.io"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["virtualmachines"]
+  validations:
+    - expression: "object.spec.template.metadata.annotations['hooks.kubevirt.io/hookSidecars'] == '[{\"args\": [\"--version\", \"v1alpha2\"], \"image\": \"quay.io/mancubus77/kubevirt-sidecar-shim\"}]'"
+      message: "The annotation hooks.kubevirt.io/hookSidecars must exactly match the required value."

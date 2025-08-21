@@ -1,0 +1,43 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: centos
+  labels:
+    vm: centos
+spec:
+  running: true
+  template:
+    metadata:
+      creationTimestamp: null
+      annotations:
+        hooks.kubevirt.io/hookSidecars: '[{"args": ["--version", "v1alpha2"], "image": "quay.io/mancubus77/kubevirt-sidecar-shim"}]'
+    spec:
+      architecture: amd64
+      domain:
+        cpu:
+          cores: 1
+          sockets: 1
+          threads: 1
+        memory:
+          guest: 1Gi
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: containerdisk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+      terminationGracePeriodSeconds: 0
+      volumes:
+        - containerDisk:
+            #image: 'quay.io/mancubus77/container-disks:cirros'
+            image: 'quay.io/mancubus77/container-disks:centos'
+          name: containerdisk
+        - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: admin
+              password: admin
+              chpasswd: { expire: False }
+          name: cloudinitdisk
