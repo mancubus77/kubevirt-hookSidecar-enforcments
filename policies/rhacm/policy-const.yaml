@@ -18,6 +18,17 @@ spec:
             kinds:
               - apiGroups: ["kubevirt.io"]
                 kinds: ["VirtualMachine"]
+    - objectDefinition:
+        apiVersion: constraints.gatekeeper.sh/v1beta1
+        kind: VMIHookSidecarRequired        # MUST match ConstraintTemplate.spec.crd.spec.names.kind
+        metadata:
+          name: enforce-vmi-hook-sidecar
+        spec:
+          enforcementAction: deny
+          match:
+            kinds:
+              - apiGroups: ["kubevirt.io"]
+                kinds: ["VirtualMachineInstance"]
 
 ---
 apiVersion: apps.open-cluster-management.io/v1

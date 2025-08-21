@@ -29,6 +29,30 @@ spec:
                   ann != expected
                   msg := sprintf("Invalid hooks.kubevirt.io/hookSidecars. Must exactly equal %v", [expected])
                 }
+
+    - objectDefinition:
+        apiVersion: templates.gatekeeper.sh/v1
+        kind: ConstraintTemplate
+        metadata:
+          name: vmihooksidecarrequired
+        spec:
+          crd:
+            spec:
+              names:
+                kind: VMIHookSidecarRequired   # This registers the CRD kind
+          targets:
+            - target: admission.k8s.gatekeeper.sh
+              rego: |
+                package vmihooksidecar
+                expected := "[{\"args\": [\"--version\", \"v1alpha2\"], \"image\": \"quay.io/mancubus77/kubevirt-sidecar-shim\"}]"
+                violation[{"msg": msg}] {
+                  input.review.kind.kind == "VirtualMachineInstance"
+                  obj := input.review.object
+                  ann := obj.metadata.annotations["hooks.kubevirt.io/hookSidecars"]
+                  ann != expected
+                  msg := sprintf("Invalid hooks.kubevirt.io/hookSidecars. Must exactly equal %v", [expected])
+                }
+
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule
